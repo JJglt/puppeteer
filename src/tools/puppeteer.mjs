@@ -73,18 +73,22 @@ export default async function (server, toolName = 'puppeteer') {
           });
         }
         try {
-          await page.setRequestInterception(true);
-          page.on('request', req => {
-            if (req.isNavigationRequest() && req.url() === url) {
-              req.continue({
-                method: method || 'GET',
-                headers: headers ? { ...req.headers(), ...headers } : req.headers(),
-                postData: (method && method !== 'GET' && body) ? body : undefined,
-              });
-            } else {
-              req.continue();
-            }
-          });
+          // Only enable request interception if needed
+          const needsInterception = (method && method !== 'GET') || headers || body;
+          if (needsInterception) {
+            await page.setRequestInterception(true);
+            page.on('request', req => {
+              if (req.isNavigationRequest() && req.url() === url) {
+                req.continue({
+                  method: method || 'GET',
+                  headers: headers ? { ...req.headers(), ...headers } : req.headers(),
+                  postData: (method && method !== 'GET' && body) ? body : undefined,
+                });
+              } else {
+                req.continue();
+              }
+            });
+          }
           const navOptions = { waitUntil: 'networkidle0' };
           if (timeout) navOptions['timeout'] = timeout;
           await page.goto(url, navOptions);

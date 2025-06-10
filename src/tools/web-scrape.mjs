@@ -27,7 +27,7 @@ export default async function (server, toolName = 'web-scrape') {
           secure: false,
         });
         try {
-          await page.goto(url, { waitUntil: 'networkidle2', timeout: 15000 });
+          await page.goto(url, { waitUntil: 'networkidle0', timeout: 15000 });
           // Optionally wait for body to be visible (improves reliability)
           await page.waitForSelector('body', { timeout: 5000 });
           const text = await page.evaluate(() => {

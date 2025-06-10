@@ -1,6 +1,6 @@
 {
     "name": "puppeteer",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "type": "module",
     "description": "Yet another MCP server template...",
     "main": "puppeteer.js",

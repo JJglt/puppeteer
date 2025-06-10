@@ -14,7 +14,6 @@ export default async function (server, toolName = 'puppeteer') {
       body: z.string().optional(),
       timeout: z.number().optional(),
       selector: z.string().optional(),
-      returnHtml: z.boolean().optional(),
       waitForSelector: z.string().optional(),
       cookies: z.array(z.record(z.any())).optional(),
       followRedirects: z.boolean().optional(),
@@ -28,7 +27,7 @@ export default async function (server, toolName = 'puppeteer') {
     async (_args, _extra) => {
       log.info('web-scrape', _args);
       const {
-        url, method, headers, userAgent, body, timeout, selector, returnHtml, waitForSelector,
+        url, method, headers, userAgent, body, timeout, selector, waitForSelector,
         cookies, followRedirects, includeHeaders, includeStatus, disableJavaScript,
         proxy, viewport, ignoreSSLErrors
       } = _args;
@@ -117,12 +116,6 @@ export default async function (server, toolName = 'puppeteer') {
           if (includeHeaders && respHeaders) result.headers = respHeaders;
           if (jsonData) {
             result.content = await mainResponse.text();
-          } else if (returnHtml) {
-            if (selector) {
-              result.html = await page.$eval(selector, el => el.outerHTML);
-            } else {
-              result.html = await page.content();
-            }
           } else {
             // Extract text
             if (selector) {

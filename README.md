@@ -1,168 +1,127 @@
-# MCP puppeteer
+# Puppeteer Web Scraper MCP
 
-A modern Node.js puppeteer for building Model Context Protocol (MCP) servers and clients, with HTTP transport, dynamic tool registration, robust logging, and graceful shutdown.
-
----
-
-## Features
-
-- **MCP Server and Client**: Easily start an MCP server and connect a client for tool discovery and invocation.
-- **Dynamic Tool Registration**: Drop-in `.mjs` files in `src/tools/` to register new tools automatically.
-- **HTTP API**: Built-in Express HTTP server for MCP transport and health checks.
-- **Graceful Shutdown**: Handles process signals and cleans up resources on exit.
-- **Winston-based Logging**: Configurable, structured logging for all components.
-- **Environment-based Configuration**: Use `.env` for ports, tokens, and log levels.
+A Node.js project for dynamic web page scraping using Puppeteer, exposed as a Model Context Protocol (MCP) server tool. This project features a custom-managed Puppeteer browser pool and a robust HTTP API for extracting visible text from web pages.
 
 ---
 
-## Getting Started
+## Project Features
 
-### 1. Clone the repository
+- **Custom Puppeteer Pool**: Efficient FIFO pool of 4 browser workers for concurrent, reliable scraping.
+- **Web Scrape Tool**: Securely extract visible text from any web page via a single MCP tool endpoint.
+- **Modern Logging**: Structured logging for all scraping and server operations.
+- **Graceful Shutdown**: Cleans up browser resources and server connections on exit.
+
+---
+
+## Usage
+
+1. **Install dependencies**
+
+   ```sh
+   npm install
+   npm test # Optional
+   ```
+
+2. **Configure environment**
+
+   Create a `.env` file with:
+
+   ```env
+   MCP_PORT=1234
+   MCP_TOKEN=your-mcp-token
+   LOG_LEVEL=info
+   ```
+
+3. **Run the server**
+
+   ```sh
+   node puppeteer.mjs
+   ```
+
+4. **Call the web-scrape tool**
+
+   - Use the MCP HTTP API to invoke the `web-scrape` tool with a JSON body:
+
+     ```json
+     { "url": "https://example.com" }
+     ```
+
+   - Returns the visible text content of the page.
+
+---
+
+## Code Overview
+
+- `src/custom/puppeteerPool.mjs`: Manages a pool of Puppeteer browser instances for efficient, parallel scraping.
+- `src/tools/web-scrape.mjs`: Registers the `web-scrape` tool, which uses the pool to fetch and extract visible text from a given URL.
+
+---
+
+## Security & Best Practices
+
+- **Tokens**: Keep your `.env` and MCP_TOKEN secret.
+- **Production**: Run as a non-root user and monitor resource usage.
+- **Extensibility**: Add new tools in `src/tools/` as needed.
+
+---
+
+## Running as a Systemd Service (Linux)
+
+To run this project as a background service on Linux, use the provided `puppeteer.service` file for systemd.
+
+### 1. Install Chrome for Puppeteer
+
+Puppeteer requires a compatible browser. You can install Chrome to a cache directory with:
 
 ```sh
-# Replace <your-username> and <your-repo> with your GitHub info
-git clone https://github.com/<your-username>/<your-repo>.git
-cd <your-repo>
+PUPPETEER_CACHE_DIR=.cache/ npx puppeteer browsers install chrome
 ```
 
-### 2. Install dependencies
-
-```sh
-npm install
-```
-
-### 3. Configure environment
-
-Create a `.env` file with your settings:
+For production, set the cache directory to a persistent location (e.g. `/opt/puppeteer/.cache`) and ensure your `.env` contains:
 
 ```env
-MCP_PORT=1234
-MCP_TOKEN=your-mcp-token
-LOG_LEVEL=info
+PUPPETEER_CACHE_DIR=/opt/puppeteer/.cache
 ```
 
-### 4. Run the puppeteer
+### 2. Configure the systemd service
 
-```sh
-node puppeteer.mjs
-```
-
----
-
-## Customization
-
-### Adding Tools
-
-- Place a `.mjs` file in `src/tools/`.
-- Export a default async function that registers your tool with the MCP server.
-- Use Zod for input validation and `buildResponse` from `toolHelpers.mjs` for output.
-
-Example: `src/tools/mcp-echo.mjs`
-
-```js
-import { z } from 'zod';
-import { buildResponse } from '../toolHelpers.mjs';
-
-export default async function (server, toolName = 'mcp-echo') {
-  server.tool(
-    toolName,
-    "Echo Tool",
-    { echoText: z.string() },
-    async (_args, _extra) => {
-      const pong = {
-        message: "echo-reply",
-        data: {
-          text: _args.echoText
-        }
-      };
-      return buildResponse(pong);
-    }
-  );
-}
-```
-
-### Logging
-
-- Logging is handled by Winston.
-- Set `LOG_LEVEL` in your `.env` (`debug`, `info`, `warn`, `error`).
-
-### Error Handling & Shutdown
-
-- Uncaught exceptions and rejections are logged.
-- Graceful shutdown on `SIGTERM`, `SIGINT`, or `SIGHUP`.
-- The app will attempt to close the HTTP and MCP servers cleanly before exiting.
-
----
-
-## Systemd Service Setup
-
-To run your app as a service on Linux, use the provided `puppeteer.service` file.
-
-**Update the paths and names to match your project.**
-
-Example `puppeteer.service`:
+- Edit `puppeteer.service` to match your deployment paths and user:
 
 ```ini
 [Unit]
-Description=MCP puppeteer
+Description=puppeteer
 After=network-online.target
 Wants=network-online.target
 StartLimitBurst=3
 StartLimitIntervalSec=60
 
 [Service]
-User=appuser
-Group=appgroup
+User=puppeteer
+Group=puppeteer
 RestartSec=5
 Restart=on-failure
 WorkingDirectory=/opt/puppeteer
-ExecStart=/usr/bin/node /opt/puppeteer/puppeteer.mjs
+ExecStart=/opt/puppeteer/puppeteer.mjs
 EnvironmentFile=/opt/puppeteer/.env
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-**Instructions:**
+- Copy the file to systemd:
 
-1. Copy and rename the service file:
-
-   ```sh
-   sudo cp puppeteer.service /etc/systemd/system/myapp.service
-   ```
-
-2. Edit the service file:
-   - Set `WorkingDirectory` and `ExecStart` to your app's location and main file (use absolute paths).
-   - Set `EnvironmentFile` to your `.env` location.
-   - Change `User` and `Group` to a non-root user for security.
-
-3. Reload systemd and enable the service:
-
-   ```sh
-   sudo systemctl daemon-reload
-   sudo systemctl enable myapp.service
-   sudo systemctl start myapp.service
-   sudo systemctl status myapp.service
-   ```
-
----
-
-## Folder Structure
-
-```text
-src/
-  tools/         # Tool modules (auto-registered)
-  *.mjs          # Core logic (server, client, logging, etc.)
+```sh
+sudo cp puppeteer.service /etc/systemd/system/puppeteer.service
 ```
 
----
+- Reload systemd and enable the service:
 
-## Best Practices & Tips
-
-- **Keep your tokens secret!** Never commit your `.env` file or secrets to version control.
-- **Use a dedicated, non-root user** for running your app in production.
-- **Write tests** for your tools and core logic as your app grows.
-- **Check the Model Context Protocol documentation** for new features and best practices.
+```sh
+sudo systemctl daemon-reload
+sudo systemctl enable puppeteer.service
+sudo systemctl start puppeteer.service
+sudo systemctl status puppeteer.service
+```
 
 ---
 
@@ -170,7 +129,8 @@ src/
 
 MIT
 
-## Developer Support
+---
 
-Email: <russell.purinton@gmail.com>
+For questions or support,
+Email: Russell Purinton <russell.purinton@gmail.com>
 Discord: laozi101

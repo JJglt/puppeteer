@@ -1,16 +1,16 @@
 {
-    "name": "framework",
+    "name": "puppeteer",
     "version": "1.0.0",
     "type": "module",
     "description": "Yet another MCP server template...",
-    "main": "framework.js",
+    "main": "puppeteer.js",
     "scripts": {
-        "start": "node framework.js",
+        "start": "node puppeteer.js",
         "test": "npx --node-options=\"--experimental-vm-modules --no-warnings\" jest --detectOpenHandles --silent"
     },
     "keywords": [
         "mcp",
-        "framework",
+        "puppeteer",
         "template",
         "server",
         "node",
@@ -19,10 +19,10 @@
     "author": "Russell Purinton <russell.purinton@gmail.com>",
     "repository": {
         "type": "git",
-        "url": "https://github.com/rpurinton/framework.git"
+        "url": "https://github.com/rpurinton/puppeteer.git"
     },
     "bugs": {
-        "url": "https://github.com/rpurinton/framework/issues"
+        "url": "https://github.com/rpurinton/puppeteer/issues"
     },
     "license": "MIT",
     "dependencies": {

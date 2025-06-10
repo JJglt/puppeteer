@@ -1,6 +1,6 @@
-# MCP Framework
+# MCP puppeteer
 
-A modern Node.js framework for building Model Context Protocol (MCP) servers and clients, with HTTP transport, dynamic tool registration, robust logging, and graceful shutdown.
+A modern Node.js puppeteer for building Model Context Protocol (MCP) servers and clients, with HTTP transport, dynamic tool registration, robust logging, and graceful shutdown.
 
 ---
 
@@ -41,10 +41,10 @@ MCP_TOKEN=your-mcp-token
 LOG_LEVEL=info
 ```
 
-### 4. Run the framework
+### 4. Run the puppeteer
 
 ```sh
-node framework.mjs
+node puppeteer.mjs
 ```
 
 ---
@@ -96,15 +96,15 @@ export default async function (server, toolName = 'mcp-echo') {
 
 ## Systemd Service Setup
 
-To run your app as a service on Linux, use the provided `framework.service` file.
+To run your app as a service on Linux, use the provided `puppeteer.service` file.
 
 **Update the paths and names to match your project.**
 
-Example `framework.service`:
+Example `puppeteer.service`:
 
 ```ini
 [Unit]
-Description=MCP Framework
+Description=MCP puppeteer
 After=network-online.target
 Wants=network-online.target
 StartLimitBurst=3
@@ -115,9 +115,9 @@ User=appuser
 Group=appgroup
 RestartSec=5
 Restart=on-failure
-WorkingDirectory=/opt/framework
-ExecStart=/usr/bin/node /opt/framework/framework.mjs
-EnvironmentFile=/opt/framework/.env
+WorkingDirectory=/opt/puppeteer
+ExecStart=/usr/bin/node /opt/puppeteer/puppeteer.mjs
+EnvironmentFile=/opt/puppeteer/.env
 
 [Install]
 WantedBy=multi-user.target
@@ -128,7 +128,7 @@ WantedBy=multi-user.target
 1. Copy and rename the service file:
 
    ```sh
-   sudo cp framework.service /etc/systemd/system/myapp.service
+   sudo cp puppeteer.service /etc/systemd/system/myapp.service
    ```
 
 2. Edit the service file:

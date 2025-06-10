@@ -2,7 +2,7 @@ import { z } from 'zod';
 import log from '../log.mjs';
 import { buildResponse } from '../toolHelpers.mjs';
 
-export default async function (server, toolName = 'web-scrape') {
+export default async function (server, toolName = 'puppeteer') {
   server.tool(
     toolName,
     "Extract text or JSON from a web page with advanced options",

@@ -13,6 +13,8 @@ export default async function (server, toolName = 'web-scrape') {
       const pool = (await import('../custom/puppeteerPool.mjs')).default;
       const response = await pool.run(async (browser) => {
         const page = await browser.newPage();
+        // Spoof user agent to appear as a real browser
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36');
         // Enable JavaScript and cookies (default in Puppeteer, but set explicitly)
         await page.setJavaScriptEnabled(true);
         // Set a default cookie to simulate a browser session (optional, can be customized)

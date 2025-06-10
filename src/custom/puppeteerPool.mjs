@@ -9,16 +9,21 @@ class PuppeteerPool {
     this.workers = [];
     this.idleWorkers = [];
     this.initialized = false;
+    this._initPromise = null; // Prevent race condition
   }
 
   async init() {
     if (this.initialized) return;
-    for (let i = 0; i < this.size; i++) {
-      const browser = await puppeteer.launch({ headless: 'new' });
-      this.workers.push(browser);
-      this.idleWorkers.push(browser);
-    }
-    this.initialized = true;
+    if (this._initPromise) return this._initPromise;
+    this._initPromise = (async () => {
+      for (let i = 0; i < this.size; i++) {
+        const browser = await puppeteer.launch({ headless: 'new' });
+        this.workers.push(browser);
+        this.idleWorkers.push(browser);
+      }
+      this.initialized = true;
+    })();
+    await this._initPromise;
   }
 
   async run(taskFn) {
@@ -34,25 +39,53 @@ class PuppeteerPool {
     const { taskFn, resolve, reject } = this.queue.shift();
     const browser = this.idleWorkers.shift();
     (async () => {
+      let browserHealthy = true;
       try {
+        if (!browser.isConnected() || browser.process() && browser.process().exitCode !== null) {
+          // Browser is dead, replace it
+          const idx = this.workers.indexOf(browser);
+          if (idx !== -1) this.workers.splice(idx, 1);
+          const newBrowser = await puppeteer.launch({ headless: 'new' });
+          this.workers.push(newBrowser);
+          this.idleWorkers.push(newBrowser);
+          browserHealthy = false;
+          throw new Error('Browser instance was not healthy and has been replaced.');
+        }
         const result = await taskFn(browser);
         resolve(result);
       } catch (err) {
         reject(err);
       } finally {
-        this.idleWorkers.push(browser);
+        if (browserHealthy) this.idleWorkers.push(browser);
         this.processQueue();
       }
     })();
   }
 
-  async close() {
-    for (const browser of this.workers) {
-      await browser.close();
-    }
+  async close({ force = false, timeout = 10000 } = {}) {
+    // Optionally wait for busy workers to finish, or force close after timeout
+    const closing = this.workers.map(async (browser) => {
+      if (force) {
+        try { await browser.close(); } catch {}
+      } else {
+        // Try to close gracefully
+        try { await browser.close(); } catch {}
+      }
+    });
+    await Promise.all(closing);
     this.workers = [];
     this.idleWorkers = [];
     this.initialized = false;
+    this._initPromise = null;
+  }
+
+  getStatus() {
+    return {
+      total: this.size,
+      busy: this.size - this.idleWorkers.length,
+      idle: this.idleWorkers.length,
+      queue: this.queue.length,
+    };
   }
 }
 

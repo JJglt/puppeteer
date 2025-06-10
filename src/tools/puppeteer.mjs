@@ -88,9 +88,27 @@ export default async function (server, toolName = 'puppeteer') {
               }
             });
           }
-          const navOptions = { waitUntil: 'networkidle0' };
-          if (timeout) navOptions['timeout'] = timeout;
-          await page.goto(url, navOptions);
+          // Set navigation options with higher default timeout and fallback
+          let navOptions = { waitUntil: 'networkidle0', timeout: timeout || 60000 };
+          let navigationError = null;
+          try {
+            await page.goto(url, navOptions);
+          } catch (err) {
+            navigationError = err;
+            // Fallback: try with 'domcontentloaded' if 'networkidle0' times out
+            if (err.name === 'TimeoutError') {
+              navOptions.waitUntil = 'domcontentloaded';
+              try {
+                await page.goto(url, navOptions);
+                navigationError = null;
+              } catch (err2) {
+                navigationError = err2;
+              }
+            }
+          }
+          if (navigationError) {
+            throw new Error(`Navigation failed: ${navigationError.message}`);
+          }
           if (waitForSelector) {
             await page.waitForSelector(waitForSelector, { timeout: timeout || 5000 });
           } else {

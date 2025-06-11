@@ -133,4 +133,4 @@ MIT
 
 For questions or support,
 Email: Russell Purinton <russell.purinton@gmail.com>
-Discord: laozi101
+Github & Discord: rpurinton

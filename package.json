@@ -1,6 +1,6 @@
 {
     "name": "puppeteer",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "type": "module",
     "description": "Yet another MCP server template...",
     "main": "puppeteer.js",
@@ -30,7 +30,8 @@
         "dotenv": "^16.5.0",
         "express": "^5.1.0",
         "puppeteer": "^24.10.0",
-        "winston": "^3.17.0"
+        "winston": "^3.17.0",
+        "zod-to-json-schema": "^3.24.5"
     },
     "devDependencies": {
         "jest": "^29.7.0",

